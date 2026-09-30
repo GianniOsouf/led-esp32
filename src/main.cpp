@@ -15,6 +15,7 @@
 static const int PIN_R = 25;
 static const int PIN_G = 26;
 static const int PIN_B = 27;
+static const int BTN_PIN = 12;
 
 static const int PWM_FREQ_HZ    = 5000;
 static const int PWM_RESOLUTION = 8;
@@ -23,16 +24,15 @@ static const int CH_R = 0, CH_G = 1, CH_B = 2;
 // ---------------------------------------------------------------------------
 // Provisioning wifi
 // ---------------------------------------------------------------------------
-// ATTENTION : WPA2 exige un mot de passe d'au moins 8 caractères. "123456"
-// (6 caractères) est en dessous du minimum : l'ESP32 créera donc un réseau
-// OUVERT (sans mot de passe), le SDK ignore silencieusement un mdp trop court.
-// Allonge-le (ex: "123456789") si tu veux une vraie protection.
+
 static const char* AP_SSID = "Lumière";
 static const char* AP_PASS = "123456789";
 static const uint32_t WIFI_CONNECT_TIMEOUT_MS = 15000;
 
 DNSServer dnsServer;
 bool provisioning = false;
+bool powerOn = true;
+bool postWakeFlashing = false;
 
 // Serveur web + websocket (utilisé dans les deux modes)
 AsyncWebServer server(80);
@@ -44,7 +44,7 @@ Preferences wifiPrefs;
 // ---------------------------------------------------------------------------
 // Etat courant de l'éclairage
 // ---------------------------------------------------------------------------
-enum Mode { MODE_FIXED, MODE_BREATHE, MODE_FADE, MODE_WAVE };
+enum Mode { MODE_FIXED, MODE_BREATHE, MODE_FADE, MODE_WAVE, MODE_STROBE, MODE_CANDLE, MODE_ALTERNATE };
 struct Color { uint8_t r, g, b; };
 
 Mode currentMode = MODE_FIXED;
@@ -58,6 +58,7 @@ struct WakeConfig {
   uint8_t minute = 0;
   bool days[7] = {false, true, true, true, true, true, false};
   uint16_t durationSec = 20 * 60;
+  bool flashAfter = false;
 };
 WakeConfig wake;
 
@@ -86,6 +87,11 @@ void saveState() {
   ledPrefs.putUChar("wH", wake.hour);
   ledPrefs.putUChar("wM", wake.minute);
   ledPrefs.putUShort("wDur", wake.durationSec);
+  ledPrefs.putBool("power", powerOn);
+  ledPrefs.putBool("wFlash", wake.flashAfter);
+  ledPrefs.putBool("power", powerOn);
+  ledPrefs.putBool("wFlash", wake.flashAfter);
+
   uint8_t daysMask = 0;
   for (int i = 0; i < 7; i++) if (wake.days[i]) daysMask |= (1 << i);
   ledPrefs.putUChar("wDays", daysMask);
@@ -102,6 +108,8 @@ void loadState() {
   wake.durationSec = ledPrefs.getUShort("wDur", 20 * 60);
   uint8_t daysMask = ledPrefs.getUChar("wDays", 0b00111110);
   for (int i = 0; i < 7; i++) wake.days[i] = daysMask & (1 << i);
+  powerOn = ledPrefs.getBool("power", true);
+  wake.flashAfter = ledPrefs.getBool("wFlash", false);
 }
 
 // ---------------------------------------------------------------------------
@@ -109,7 +117,7 @@ void loadState() {
 // ---------------------------------------------------------------------------
 void broadcastState() {
   JsonDocument doc;
-  const char* modeNames[] = {"fixed", "breathe", "fade", "wave"};
+  const char* modeNames[] = {"fixed", "breathe", "fade", "wave", "strobe", "candle", "alternate"};
   doc["mode"] = modeNames[currentMode];
   char buf[8];
   snprintf(buf, sizeof(buf), "#%02x%02x%02x", color1.r, color1.g, color1.b);
@@ -124,6 +132,8 @@ void broadcastState() {
   JsonArray daysArr = doc["wakeDays"].to<JsonArray>();
   for (int i = 0; i < 7; i++) daysArr.add(wake.days[i]);
   doc["wakeRunning"] = wakeRunning;
+  doc["powerOn"] = powerOn;
+  doc["wakeFlashAfter"] = wake.flashAfter;
 
   String out;
   serializeJson(doc, out);
@@ -162,11 +172,15 @@ void handleCommand(const String& msg) {
   } else if (cmd == "setBrightness") {
     brightness = constrain((int)doc["value"], 0, 255);
     saveState();
+  } else if (cmd == "setPower") {
+    powerOn = doc["value"] | true;
+    saveState();
   } else if (cmd == "setWake") {
     wake.enabled = doc["enabled"] | false;
     wake.hour = doc["hour"] | 7;
     wake.minute = doc["minute"] | 0;
     wake.durationSec = doc["duration"] | 1200;
+    wake.flashAfter = doc["flashAfter"] | false;
     JsonArray daysArr = doc["days"];
     for (int i = 0; i < 7 && i < (int)daysArr.size(); i++) wake.days[i] = daysArr[i];
     saveState();
@@ -212,6 +226,18 @@ Color hsvToRgb(float h, float s, float v) {
 void effectsTask(void* pv) {
   for (;;) {
     unsigned long t = millis();
+    if (postWakeFlashing) {
+      bool on = ((t / 500) % 2) == 0;
+      writeRGB(on ? 255 : 0, on ? 255 : 0, on ? 255 : 0);
+      vTaskDelay(pdMS_TO_TICKS(20));
+      continue;
+    }
+
+    if (!powerOn) {
+      writeRGB(0, 0, 0);
+      vTaskDelay(pdMS_TO_TICKS(20));
+      continue;
+    }
 
     if (wakeRunning) {
       float progress = (float)(t - wakeStartTime) / (wake.durationSec * 1000.0f);
@@ -250,6 +276,22 @@ void effectsTask(void* pv) {
           writeRGB(c.r, c.g, c.b);
           break;
         }
+        case MODE_STROBE: {
+          bool on = ((t / 100) % 2) == 0;
+          writeRGB(on ? color1.r : 0, on ? color1.g : 0, on ? color1.b : 0);
+          break;
+        }
+        case MODE_CANDLE: {
+          uint8_t flicker = 180 + random(0, 76); // 180-255
+          writeRGB(flicker, flicker * 0.55, 0);
+          break;
+        }
+        case MODE_ALTERNATE: {
+          bool useColor1 = ((t / 800) % 2) == 0;
+          Color c = useColor1 ? color1 : color2;
+          writeRGB(c.r, c.g, c.b);
+          break;
+        }
       }
     }
 
@@ -276,12 +318,36 @@ void wakeCheckTask(void* pv) {
       broadcastState();
     }
 
-    if (wakeRunning && (millis() - wakeStartTime) > (unsigned long)(wake.durationSec * 1000UL + 5000UL)) {
+    if (wakeRunning && (millis() - wakeStartTime) > (unsigned long)(wake.durationSec * 1000UL)) {
       wakeRunning = false;
+      if(wake.flashAfter) postWakeFlashing = true;
       broadcastState();
     }
 
     vTaskDelay(pdMS_TO_TICKS(1000));
+  }
+}
+
+void buttonTask(void*pv){
+  bool lastState = HIGH;
+  for(;;){
+    bool state = digitalRead(BTN_PIN);
+    if(state == HIGH && lastState == LOW){
+      delay(30); // debounce
+      if(digitalRead(BTN_PIN) == LOW) {
+        if (postWakeFlashing) {
+          postWakeFlashing = false;
+          powerOn = false;
+        } else {
+          powerOn = !powerOn;
+        }
+        saveState();
+        broadcastState();
+        while(digitalRead(BTN_PIN) == LOW) vTaskDelay(pdMS_TO_TICKS(10)); // wait for button release
+        }
+      }
+    lastState = state;
+    vTaskDelay(pdMS_TO_TICKS(20));
   }
 }
 
@@ -302,6 +368,7 @@ void startMainApp() {
 
   xTaskCreatePinnedToCore(effectsTask, "effects", 4096, nullptr, 1, nullptr, 1);
   xTaskCreatePinnedToCore(wakeCheckTask, "wakeCheck", 4096, nullptr, 1, nullptr, 1);
+  xTaskCreatePinnedToCore(buttonTask, "button", 2048, nullptr, 1, nullptr, 1);
 }
 
 // ---------------------------------------------------------------------------
@@ -366,6 +433,7 @@ void setup() {
   ledcAttachPin(PIN_G, CH_G);
   ledcAttachPin(PIN_B, CH_B);
   writeRGB(0, 0, 0);
+  pinMode(BTN_PIN, INPUT_PULLUP);
 
   ledPrefs.begin("led-esp32", false);
   wifiPrefs.begin("wifi-cfg", false);
