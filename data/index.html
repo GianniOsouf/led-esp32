@@ -6,68 +6,300 @@
 <title>Éclairage</title>
 <style>
   :root {
-    --bg: #12141c;
-    --card: #1c1f2b;
-    --accent: #ff8a3d;
-    --text: #eef0f5;
-    --muted: #8890a3;
+    --bg: #05070d;
+    --bg-grid: rgba(0, 240, 255, 0.035);
+    --card: #0d1320;
+    --card-border: rgba(0, 240, 255, 0.18);
+    --accent: #00f0ff;
+    --accent-soft: rgba(0, 240, 255, 0.35);
+    --accent2: #ff2ee6;
+    --accent2-soft: rgba(255, 46, 230, 0.35);
+    --text: #eaf6ff;
+    --muted: #61798e;
+    --danger: #ff4d6d;
+    --radius: 16px;
+    --font: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
   }
-  * { box-sizing: border-box; }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    height: 100%;
+  }
+
   body {
     margin: 0;
-    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
-    background: var(--bg);
+    font-family: var(--font);
+    background:
+      radial-gradient(circle at 15% 0%, rgba(0, 240, 255, 0.08), transparent 45%),
+      radial-gradient(circle at 85% 100%, rgba(255, 46, 230, 0.07), transparent 45%),
+      var(--bg);
+    background-attachment: fixed;
     color: var(--text);
-    padding: 20px;
+    padding: 24px 18px 60px;
     max-width: 480px;
     margin: 0 auto;
+    -webkit-font-smoothing: antialiased;
   }
-  h1 { font-size: 1.4rem; font-weight: 600; margin-bottom: 20px; }
+
+  h1 {
+    font-size: 1.45rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin: 0 0 4px 0;
+    text-shadow: 0 0 10px var(--accent-soft), 0 0 26px rgba(0, 240, 255, 0.25);
+  }
+
+  #status {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 22px;
+    letter-spacing: 0.03em;
+  }
+
+  /* --- Cartes --- */
   .card {
-    background: var(--card);
-    border-radius: 16px;
-    padding: 18px;
-    margin-bottom: 16px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)), var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 18px;
+    box-shadow:
+      0 0 0 1px rgba(0, 0, 0, 0.3),
+      0 12px 28px rgba(0, 0, 0, 0.35),
+      0 0 22px rgba(0, 240, 255, 0.04) inset;
+    position: relative;
+    overflow: hidden;
   }
-  .card h2 { font-size: 0.95rem; color: var(--muted); margin: 0 0 14px 0; text-transform: uppercase; letter-spacing: 0.05em; }
-  .modes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 40%, rgba(0, 240, 255, 0.05) 50%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .card h2 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--muted);
+    margin: 0 0 16px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  /* --- Modes --- */
+  .modes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
   .mode-btn {
-    padding: 14px 10px;
+    padding: 14px 8px;
     border-radius: 12px;
-    border: 2px solid transparent;
-    background: #262a3a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: #121a2c;
     color: var(--text);
-    font-size: 0.95rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: all 0.18s ease;
+  }
+
+  .mode-btn:hover {
+    border-color: var(--accent-soft);
+    transform: translateY(-1px);
+  }
+
+  .mode-btn.active {
+    border-color: var(--accent);
+    background: linear-gradient(160deg, rgba(0, 240, 255, 0.14), rgba(255, 46, 230, 0.08));
+    color: #ffffff;
+    box-shadow: 0 0 16px rgba(0, 240, 255, 0.35), 0 0 0 1px var(--accent);
+  }
+
+  /* --- Couleurs --- */
+  .colors {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    margin-top: 18px;
+    justify-content: center;
+  }
+
+  .color-picker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .color-picker label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  input[type="color"] {
+    width: 54px;
+    height: 54px;
+    border: none;
+    border-radius: 50%;
+    overflow: hidden;
+    padding: 0;
+    background: none;
+    cursor: pointer;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08), 0 0 16px rgba(0, 240, 255, 0.25);
+  }
+  input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+  input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
+
+  /* --- Range (luminosité) --- */
+  input[type="range"] {
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    outline: none;
+    margin: 6px 0 2px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 3px solid var(--accent);
+    box-shadow: 0 0 10px var(--accent), 0 0 20px rgba(0, 240, 255, 0.5);
     cursor: pointer;
   }
-  .mode-btn.active { border-color: var(--accent); background: #33283a; }
-  .colors { display: flex; gap: 16px; align-items: center; margin-top: 14px; }
-  .color-picker { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-  .color-picker label { font-size: 0.8rem; color: var(--muted); }
-  input[type="color"] { width: 52px; height: 52px; border: none; border-radius: 50%; overflow: hidden; padding: 0; background: none; }
-  input[type="range"] { width: 100%; }
-  .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-  .days { display: flex; gap: 6px; margin: 12px 0; }
+  input[type="range"]::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 3px solid var(--accent);
+    box-shadow: 0 0 10px var(--accent), 0 0 20px rgba(0, 240, 255, 0.5);
+    cursor: pointer;
+  }
+
+  /* --- Layout générique --- */
+  .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  /* --- Jours de la semaine --- */
+  .days {
+    display: flex;
+    gap: 6px;
+    margin: 14px 0 4px;
+  }
+
   .day-btn {
-    flex: 1; padding: 8px 0; border-radius: 8px; border: none;
-    background: #262a3a; color: var(--muted); font-size: 0.75rem; cursor: pointer;
+    flex: 1;
+    padding: 9px 0;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: #121a2c;
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: all 0.18s ease;
   }
-  .day-btn.active { background: var(--accent); color: #12141c; font-weight: 600; }
-  input[type="time"], input[type="number"] {
-    background: #262a3a; border: none; color: var(--text); padding: 10px; border-radius: 8px; font-size: 1rem;
+
+  .day-btn.active {
+    background: linear-gradient(160deg, var(--accent), var(--accent2));
+    color: #05070d;
+    border-color: transparent;
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
   }
-  .switch { position: relative; width: 46px; height: 26px; }
-  .switch input { opacity: 0; width: 0; height: 0; }
-  .slider { position: absolute; inset: 0; background: #3a3f52; border-radius: 26px; cursor: pointer; transition: .2s; }
-  .slider::before { content: ""; position: absolute; width: 20px; height: 20px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: .2s; }
-  input:checked + .slider { background: var(--accent); }
-  input:checked + .slider::before { transform: translateX(20px); }
-  #status { font-size: 0.8rem; color: var(--muted); margin-bottom: 12px; }
+
+  /* --- Champs heure / nombre --- */
+  input[type="time"],
+  input[type="number"] {
+    background: #121a2c;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text);
+    padding: 11px 12px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-family: var(--font);
+  }
+  input[type="time"]:focus,
+  input[type="number"]:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
+  }
+
+  /* --- Switch on/off --- */
+  .switch {
+    position: relative;
+    width: 48px;
+    height: 27px;
+    flex-shrink: 0;
+  }
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .slider {
+    position: absolute;
+    inset: 0;
+    background: #1c2436;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 27px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .slider::before {
+    content: "";
+    position: absolute;
+    width: 19px;
+    height: 19px;
+    left: 3px;
+    top: 3px;
+    background: #ffffff;
+    border-radius: 50%;
+    transition: 0.2s;
+  }
+  input:checked + .slider {
+    background: linear-gradient(160deg, var(--accent), var(--accent2));
+    border-color: transparent;
+    box-shadow: 0 0 14px rgba(0, 240, 255, 0.5);
+  }
+  input:checked + .slider::before {
+    transform: translateX(21px);
+  }
 </style>
 </head>
 <body>
   <h1>💡 Éclairage chambre</h1>
   <div id="status">Connexion...</div>
+  
+  <div class="card">
+    <div class="row">
+      <h2 style="margin:0">Allumage</h2>
+      <label class="switch">
+        <input type="checkbox" id="power">
+        <span class="slider"></span>
+      </label>
+    </div> 
+  </div>
 
   <div class="card">
     <h2>Mode</h2>
@@ -76,6 +308,9 @@
       <button class="mode-btn" data-mode="breathe">Breathe</button>
       <button class="mode-btn" data-mode="fade">Fade</button>
       <button class="mode-btn" data-mode="wave">Wave</button>
+      <button class="mode-btn" data-mode="strobe">Strobe</button>
+      <button class="mode-btn" data-mode="candle">Bougie</button>
+      <button class="mode-btn" data-mode="alternate">Alternance</button>
     </div>
     <div class="colors">
       <div class="color-picker">
@@ -109,6 +344,12 @@
       </div>
     </div>
     <div class="days" id="days"></div>
+    <div class="row" style="margin-top: 12px">
+      <span style="font-size: 0.85rem;color:var(--muted)">Flash après réveil</span>
+      <label class="switch">
+        <input type="checkbox" id="flashAfter">
+        <span class="slider"></span>
+      </label>
   </div>
 
 <script>
@@ -173,6 +414,12 @@ function applyState(s) {
   document.getElementById("wakeTime").value =
     String(s.wakeHour).padStart(2,"0") + ":" + String(s.wakeMinute).padStart(2,"0");
   document.getElementById("wakeDuration").value = Math.round(s.wakeDuration / 60);
+  document.getElementById("power").checked = s.powerOn;
+  document.getElementById("wakeFlashAfter").checked = s.wakeFlashAfter;
+  document.getElementById("power").addEventListener("change", (e) => {
+    send({ cmd: "setPower", value: e.target.checked });
+  });
+  document.getElementById("wakeFlashAfter").addEventListener("change", sendWake);
   wakeDays = s.wakeDays;
   renderDays();
   suppressSend = false;
@@ -213,6 +460,7 @@ function sendWake() {
     enabled: document.getElementById("wakeEnabled").checked,
     hour: h, minute: m,
     duration: parseInt(document.getElementById("wakeDuration").value) * 60,
+    flashAfter: document.getElementById("wakeFlashAfter").checked,
     days: wakeDays
   });
 }
