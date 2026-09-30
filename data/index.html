@@ -66,7 +66,7 @@
 </style>
 </head>
 <body>
-  <h1>💡 Éclairage salon</h1>
+  <h1>💡 Éclairage chambre</h1>
   <div id="status">Connexion...</div>
 
   <div class="card">
@@ -133,10 +133,33 @@ let ws;
 let suppressSend = false; // évite de renvoyer un écho reçu du serveur
 
 function connect() {
-  ws = new WebSocket(`ws://${location.host}/ws`);
-  ws.onopen = () => statusEl.textContent = "Connecté";
-  ws.onclose = () => { statusEl.textContent = "Déconnecté, reconnexion..."; setTimeout(connect, 2000); };
-  ws.onmessage = (evt) => applyState(JSON.parse(evt.data));
+  const wsProtocol =
+    window.location.protocol === "https:" ? "wss:" : "ws:";
+
+  const wsUrl = `${wsProtocol}//${window.location.host}/ws`;
+
+  console.log("Connexion WebSocket :", wsUrl);
+
+  ws = new WebSocket(wsUrl);
+
+  ws.onopen = () => {
+    console.log("WebSocket ouvert");
+    statusEl.textContent = "Connecté";
+  };
+
+  ws.onerror = (e) => {
+    console.error("Erreur WebSocket", e);
+  };
+
+  ws.onclose = () => {
+    console.log("WebSocket fermé");
+    statusEl.textContent = "Déconnecté, reconnexion...";
+    setTimeout(connect, 2000);
+  };
+
+  ws.onmessage = (evt) => {
+    applyState(JSON.parse(evt.data));
+  };
 }
 connect();
 
