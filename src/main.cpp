@@ -165,6 +165,9 @@ void handleCommand(const String& msg) {
     else if (m == "breathe") currentMode = MODE_BREATHE;
     else if (m == "fade") currentMode = MODE_FADE;
     else if (m == "wave") currentMode = MODE_WAVE;
+    else if (m == "strobe") currentMode = MODE_STROBE;
+    else if (m == "candle") currentMode = MODE_CANDLE;
+    else if (m == "alternate") currentMode = MODE_ALTERNATE;
     if (doc["color1"].is<const char*>()) color1 = parseHexColor(doc["color1"].as<String>());
     if (doc["color2"].is<const char*>()) color2 = parseHexColor(doc["color2"].as<String>());
     wakeRunning = false;
@@ -332,7 +335,7 @@ void buttonTask(void*pv){
   bool lastState = HIGH;
   for(;;){
     bool state = digitalRead(BTN_PIN);
-    if(state == HIGH && lastState == LOW){
+    if(state == LOW && lastState == HIGH){
       delay(30); // debounce
       if(digitalRead(BTN_PIN) == LOW) {
         if (postWakeFlashing) {

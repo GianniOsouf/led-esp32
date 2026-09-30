@@ -350,6 +350,7 @@
         <input type="checkbox" id="flashAfter">
         <span class="slider"></span>
       </label>
+    </div>
   </div>
 
 <script>
@@ -415,11 +416,7 @@ function applyState(s) {
     String(s.wakeHour).padStart(2,"0") + ":" + String(s.wakeMinute).padStart(2,"0");
   document.getElementById("wakeDuration").value = Math.round(s.wakeDuration / 60);
   document.getElementById("power").checked = s.powerOn;
-  document.getElementById("wakeFlashAfter").checked = s.wakeFlashAfter;
-  document.getElementById("power").addEventListener("change", (e) => {
-    send({ cmd: "setPower", value: e.target.checked });
-  });
-  document.getElementById("wakeFlashAfter").addEventListener("change", sendWake);
+  document.getElementById("flashAfter").checked = s.wakeFlashAfter;
   wakeDays = s.wakeDays;
   renderDays();
   suppressSend = false;
@@ -452,6 +449,11 @@ document.getElementById("color2").addEventListener("input", sendMode);
 document.getElementById("brightness").addEventListener("input", (e) => {
   send({ cmd: "setBrightness", value: parseInt(e.target.value) });
 });
+
+document.getElementById("power").addEventListener("change", (e) => {
+  send({ cmd: "setPower", value: e.target.checked });
+});
+document.getElementById("flashAfter").addEventListener("change", sendWake);
 
 function sendWake() {
   const [h, m] = document.getElementById("wakeTime").value.split(":").map(Number);
