@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="neonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f0ff"/>
+      <stop offset="100%" stop-color="#ff2ee6"/>
+    </linearGradient>
+    <radialGradient id="bgGlow" cx="50%" cy="20%" r="80%">
+      <stop offset="0%" stop-color="#101a30"/>
+      <stop offset="100%" stop-color="#05070d"/>
+    </radialGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2.2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- fond carte arrondi, cohérent avec l'UI -->
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#bgGlow)" stroke="url(#neonGrad)" stroke-width="2" opacity="0.95"/>
+
+  <!-- ampoule stylisée -->
+  <g filter="url(#glow)">
+    <circle cx="32" cy="26" r="13" fill="none" stroke="url(#neonGrad)" stroke-width="3"/>
+    <path d="M26 36 L26 42 Q26 45 29 45 L35 45 Q38 45 38 42 L38 36"
+          fill="none" stroke="url(#neonGrad)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="28" y1="49" x2="36" y2="49" stroke="url(#neonGrad)" stroke-width="3" stroke-linecap="round"/>
+    <path d="M27 22 L32 27 L29 27 L34 33" fill="none" stroke="url(#neonGrad)" stroke-width="2.4"
+          stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

@@ -48,8 +48,10 @@ enum Mode { MODE_FIXED, MODE_BREATHE, MODE_FADE, MODE_WAVE, MODE_STROBE, MODE_CA
 struct Color { uint8_t r, g, b; };
 
 Mode currentMode = MODE_FIXED;
+
 Color color1 = {255, 120, 0};
 Color color2 = {0, 80, 255};
+Color favorites[5] = {{255,0,0},{0,255,0},{0,0,255},{255,255,0},{255,255,255}};
 uint8_t brightness = 255;
 
 struct WakeConfig {
@@ -95,6 +97,13 @@ void saveState() {
   uint8_t daysMask = 0;
   for (int i = 0; i < 7; i++) if (wake.days[i]) daysMask |= (1 << i);
   ledPrefs.putUChar("wDays", daysMask);
+
+  for (int i = 0; i < 5; i++) {
+    char key[6];
+    snprintf(key, sizeof(key), "f%dr", i); ledPrefs.putUChar(key, favorites[i].r);
+    snprintf(key, sizeof(key), "f%dg", i); ledPrefs.putUChar(key, favorites[i].g);
+    snprintf(key, sizeof(key), "f%db", i); ledPrefs.putUChar(key, favorites[i].b);
+  }
 }
 
 void loadState() {
@@ -110,6 +119,14 @@ void loadState() {
   for (int i = 0; i < 7; i++) wake.days[i] = daysMask & (1 << i);
   powerOn = ledPrefs.getBool("power", true);
   wake.flashAfter = ledPrefs.getBool("wFlash", false);
+
+  Color defaults[5] = {{255,0,0},{0,255,0},{0,0,255},{255,255,0},{255,255,255}};
+  for (int i = 0; i < 5; i++) {
+    char key[6];
+    snprintf(key, sizeof(key), "f%dr", i); favorites[i].r = ledPrefs.getUChar(key, defaults[i].r);
+    snprintf(key, sizeof(key), "f%dg", i); favorites[i].g = ledPrefs.getUChar(key, defaults[i].g);
+    snprintf(key, sizeof(key), "f%db", i); favorites[i].b = ledPrefs.getUChar(key, defaults[i].b);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -134,6 +151,12 @@ void broadcastState() {
   doc["wakeRunning"] = wakeRunning;
   doc["powerOn"] = powerOn;
   doc["wakeFlashAfter"] = wake.flashAfter;
+
+  JsonArray favArr = doc["favorites"].to<JsonArray>();
+  for (int i = 0; i < 5; i++) {
+    snprintf(buf, sizeof(buf), "#%02x%02x%02x", favorites[i].r, favorites[i].g, favorites[i].b);
+    favArr.add(buf);
+  }
 
   String out;
   serializeJson(doc, out);
@@ -177,6 +200,16 @@ void handleCommand(const String& msg) {
     saveState();
   } else if (cmd == "setPower") {
     powerOn = doc["value"] | true;
+    saveState();
+  } else if (cmd == "saveFavorite") {
+    Color c = parseHexColor(doc["color"] | "#ffffff");
+    int existingIdx = -1;
+    for (int i = 0; i < 5; i++) {
+      if (favorites[i].r == c.r && favorites[i].g == c.g && favorites[i].b == c.b) { existingIdx = i; break; }
+    }
+    int start = (existingIdx == -1) ? 4 : existingIdx;
+    for (int i = start; i > 0; i--) favorites[i] = favorites[i - 1];
+    favorites[0] = c;
     saveState();
   } else if (cmd == "setWake") {
     wake.enabled = doc["enabled"] | false;

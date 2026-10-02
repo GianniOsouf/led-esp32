@@ -3,26 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>Éclairage</title>
 <style>
   :root {
     --bg: #05070d;
-    --bg-grid: rgba(0, 240, 255, 0.035);
     --card: #0d1320;
     --card-border: rgba(0, 240, 255, 0.18);
     --accent: #00f0ff;
-    --accent-soft: rgba(0, 240, 255, 0.35);
     --accent2: #ff2ee6;
-    --accent2-soft: rgba(255, 46, 230, 0.35);
+    --accent-soft: rgba(0, 240, 255, 0.35);
+    --accent-faint: rgba(0, 240, 255, 0.08);
+    --accent-strong: rgba(0, 240, 255, 0.5);
+    --accent2-tint: rgba(255, 46, 230, 0.08);
     --text: #eaf6ff;
     --muted: #61798e;
-    --danger: #ff4d6d;
     --radius: 16px;
     --font: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
   }
 
   * {
     box-sizing: border-box;
+    transition: box-shadow 0.35s ease, text-shadow 0.35s ease,
+                border-color 0.35s ease, background 0.35s ease,
+                transform 0.18s ease, filter 0.5s ease;
   }
 
   html, body {
@@ -33,8 +39,8 @@
     margin: 0;
     font-family: var(--font);
     background:
-      radial-gradient(circle at 15% 0%, rgba(0, 240, 255, 0.08), transparent 45%),
-      radial-gradient(circle at 85% 100%, rgba(255, 46, 230, 0.07), transparent 45%),
+      radial-gradient(circle at 15% 0%, var(--accent-faint), transparent 45%),
+      radial-gradient(circle at 85% 100%, var(--accent2-tint), transparent 45%),
       var(--bg);
     background-attachment: fixed;
     color: var(--text);
@@ -44,12 +50,16 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  body.power-off {
+    filter: grayscale(0.85) brightness(0.7);
+  }
+
   h1 {
     font-size: 1.45rem;
     font-weight: 700;
     letter-spacing: 0.02em;
     margin: 0 0 4px 0;
-    text-shadow: 0 0 10px var(--accent-soft), 0 0 26px rgba(0, 240, 255, 0.25);
+    text-shadow: 0 0 10px var(--accent-soft), 0 0 26px var(--accent-soft);
   }
 
   #status {
@@ -69,7 +79,7 @@
     box-shadow:
       0 0 0 1px rgba(0, 0, 0, 0.3),
       0 12px 28px rgba(0, 0, 0, 0.35),
-      0 0 22px rgba(0, 240, 255, 0.04) inset;
+      0 0 22px var(--accent-faint) inset;
     position: relative;
     overflow: hidden;
   }
@@ -108,19 +118,18 @@
     font-weight: 600;
     letter-spacing: 0.02em;
     cursor: pointer;
-    transition: all 0.18s ease;
   }
 
   .mode-btn:hover {
     border-color: var(--accent-soft);
-    transform: translateY(-1px);
+    transform: translateY(-1px) scale(1.05);
   }
 
   .mode-btn.active {
     border-color: var(--accent);
     background: linear-gradient(160deg, rgba(0, 240, 255, 0.14), rgba(255, 46, 230, 0.08));
     color: #ffffff;
-    box-shadow: 0 0 16px rgba(0, 240, 255, 0.35), 0 0 0 1px var(--accent);
+    box-shadow: 0 0 16px var(--accent-soft), 0 0 0 1px var(--accent);
   }
 
   /* --- Couleurs --- */
@@ -145,19 +154,12 @@
     letter-spacing: 0.04em;
   }
 
-  input[type="color"] {
-    width: 54px;
-    height: 54px;
-    border: none;
-    border-radius: 50%;
-    overflow: hidden;
-    padding: 0;
-    background: none;
-    cursor: pointer;
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08), 0 0 16px rgba(0, 240, 255, 0.25);
+  .swatch {
+    width: 54px; height: 54px; border-radius: 50%; border: none; padding: 0; cursor: pointer;
+    background: var(--sw-color);
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.08), 0 0 16px var(--accent-soft);
   }
-  input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-  input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
+  .swatch:hover { transform: scale(1.1); }
 
   /* --- Range (luminosité) --- */
   input[type="range"] {
@@ -178,7 +180,7 @@
     border-radius: 50%;
     background: #ffffff;
     border: 3px solid var(--accent);
-    box-shadow: 0 0 10px var(--accent), 0 0 20px rgba(0, 240, 255, 0.5);
+    box-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent-strong);
     cursor: pointer;
   }
   input[type="range"]::-moz-range-thumb {
@@ -187,7 +189,7 @@
     border-radius: 50%;
     background: #ffffff;
     border: 3px solid var(--accent);
-    box-shadow: 0 0 10px var(--accent), 0 0 20px rgba(0, 240, 255, 0.5);
+    box-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent-strong);
     cursor: pointer;
   }
 
@@ -217,18 +219,21 @@
     font-weight: 700;
     letter-spacing: 0.03em;
     cursor: pointer;
-    transition: all 0.18s ease;
+  }
+
+  .day-btn:hover {
+    transform: scale(1.1);
+    border-color: var(--accent-soft);
   }
 
   .day-btn.active {
     background: linear-gradient(160deg, var(--accent), var(--accent2));
     color: #05070d;
     border-color: transparent;
-    box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+    box-shadow: 0 0 12px var(--accent-strong);
   }
 
   /* --- Champs heure / nombre --- */
-  input[type="time"],
   input[type="number"] {
     background: #121a2c;
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -238,12 +243,21 @@
     font-size: 0.95rem;
     font-family: var(--font);
   }
-  input[type="time"]:focus,
   input[type="number"]:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
+    box-shadow: 0 0 10px var(--accent-soft);
   }
+
+  .time-select { display: flex; align-items: center; gap: 6px; }
+  .time-select select {
+    background: #121a2c; border: 1px solid rgba(255,255,255,0.08); color: var(--text);
+    padding: 11px 10px; border-radius: 10px; font-size: 0.95rem; font-family: var(--font);
+    appearance: none; -webkit-appearance: none; cursor: pointer;
+  }
+  .time-select select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 10px var(--accent-soft); }
+  .time-select select:hover { transform: scale(1.06); }
+  .time-sep { color: var(--muted); font-weight: 700; }
 
   /* --- Switch on/off --- */
   .switch {
@@ -264,7 +278,6 @@
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 27px;
     cursor: pointer;
-    transition: 0.2s;
   }
   .slider::before {
     content: "";
@@ -280,25 +293,71 @@
   input:checked + .slider {
     background: linear-gradient(160deg, var(--accent), var(--accent2));
     border-color: transparent;
-    box-shadow: 0 0 14px rgba(0, 240, 255, 0.5);
+    box-shadow: 0 0 14px var(--accent-strong);
   }
   input:checked + .slider::before {
     transform: translateX(21px);
   }
+
+  /* --- Dialogue de sélection de couleur --- */
+  .color-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(2,4,10,0.72);
+    align-items: center; justify-content: center;
+    z-index: 100; padding: 20px;
+  }
+  .color-overlay.open { display: flex; }
+  .color-dialog {
+    background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius);
+    padding: 22px; width: 100%; max-width: 320px;
+    box-shadow: 0 0 30px var(--accent-soft), 0 20px 50px rgba(0,0,0,0.5);
+  }
+  .color-dialog h2 {
+    font-size: 0.85rem; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.1em; margin: 0 0 16px 0; text-align: center;
+  }
+  .fav-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 18px; }
+  .fav-swatch {
+    width: 36px; height: 36px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.12);
+    background: var(--sw-color); cursor: pointer; padding: 0;
+  }
+  .fav-swatch:hover { transform: scale(1.15); box-shadow: 0 0 14px var(--sw-color); }
+  .color-dialog-row { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 18px; }
+  .mem-btn {
+    padding: 10px 16px; border-radius: 10px; border: none; cursor: pointer;
+    background: linear-gradient(160deg, var(--accent), var(--accent2));
+    color: #05070d; font-weight: 700; font-size: 0.82rem; letter-spacing: 0.02em;
+  }
+  .close-btn {
+    display: block; width: 100%; padding: 10px; border-radius: 10px; cursor: pointer;
+    background: transparent; border: 1px solid rgba(255,255,255,0.1); color: var(--muted);
+    font-size: 0.82rem; font-weight: 600;
+  }
+  .close-btn:hover { border-color: var(--accent-soft); color: var(--text); }
+  .mem-btn:hover, .close-btn:hover, input[type="color"]:hover, .time-select select:hover {
+    transform: scale(1.06);
+  }
+  input[type="color"] {
+    width: 54px; height: 54px; border: none; border-radius: 50%; overflow: hidden; padding: 0;
+    background: none; cursor: pointer;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.08), 0 0 16px var(--accent-soft);
+  }
+  input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+  input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
 </style>
 </head>
 <body>
   <h1>💡 Éclairage chambre</h1>
   <div id="status">Connexion...</div>
-  
+
   <div class="card">
-    <div class="row">
+    <div class="row" style="margin:0">
       <h2 style="margin:0">Allumage</h2>
       <label class="switch">
         <input type="checkbox" id="power">
         <span class="slider"></span>
       </label>
-    </div> 
+    </div>
   </div>
 
   <div class="card">
@@ -314,11 +373,11 @@
     </div>
     <div class="colors">
       <div class="color-picker">
-        <input type="color" id="color1" value="#ff7800">
+        <button type="button" class="swatch" id="swatch_color1" style="--sw-color:#ff7800"></button>
         <label>Couleur 1</label>
       </div>
       <div class="color-picker" id="color2Wrap">
-        <input type="color" id="color2" value="#0050ff">
+        <button type="button" class="swatch" id="swatch_color2" style="--sw-color:#0050ff"></button>
         <label>Couleur 2</label>
       </div>
     </div>
@@ -338,7 +397,11 @@
       </label>
     </div>
     <div class="row">
-      <input type="time" id="wakeTime" value="07:00">
+      <div class="time-select">
+        <select id="wakeHour"></select>
+        <span class="time-sep">:</span>
+        <select id="wakeMinute"></select>
+      </div>
       <div>
         <input type="number" id="wakeDuration" min="1" max="60" value="20" style="width:60px"> min
       </div>
@@ -353,10 +416,25 @@
     </div>
   </div>
 
+  <div class="color-overlay" id="colorOverlay">
+    <div class="color-dialog">
+      <h2>Choisir une couleur</h2>
+      <div class="fav-row" id="favRow"></div>
+      <div class="color-dialog-row">
+        <input type="color" id="nativeColor" value="#ff7800">
+        <button type="button" class="mem-btn" id="memBtn">Mémoriser</button>
+      </div>
+      <button type="button" class="close-btn" id="closeColorDialog">Fermer</button>
+    </div>
+  </div>
+
 <script>
 const dayLabels = ["D", "L", "M", "M", "J", "V", "S"];
 const daysEl = document.getElementById("days");
 let wakeDays = [false,true,true,true,true,true,false];
+let favorites = ["#ff0000","#00ff00","#0000ff","#ffff00","#ffffff"];
+let editingTarget = null;
+let currentColors = { color1: "#ff7800", color2: "#0050ff" };
 
 dayLabels.forEach((l, i) => {
   const b = document.createElement("button");
@@ -370,55 +448,125 @@ function renderDays() {
 }
 renderDays();
 
+// --- Sélecteurs heure réveil ---
+const hourSel = document.getElementById("wakeHour");
+const minSel = document.getElementById("wakeMinute");
+for (let h = 0; h < 24; h++) {
+  const o = document.createElement("option");
+  o.value = o.textContent = String(h).padStart(2, "0");
+  hourSel.appendChild(o);
+}
+for (let m = 0; m < 60; m++) {
+  const o = document.createElement("option");
+  o.value = o.textContent = String(m).padStart(2, "0");
+  minSel.appendChild(o);
+}
+
+// --- Dialogue couleur ---
+const colorOverlay = document.getElementById("colorOverlay");
+const favRow = document.getElementById("favRow");
+const nativeColor = document.getElementById("nativeColor");
+
+function setSwatch(target, hex) {
+  currentColors[target] = hex;
+  document.getElementById("swatch_" + target).style.setProperty("--sw-color", hex);
+}
+
+function renderFavorites() {
+  favRow.innerHTML = "";
+  favorites.forEach(hex => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "fav-swatch";
+    b.style.setProperty("--sw-color", hex);
+    b.onclick = () => {
+      setSwatch(editingTarget, hex);
+      sendMode();
+      closeColorDialog();
+    };
+    favRow.appendChild(b);
+  });
+}
+renderFavorites();
+
+function openColorDialog(target) {
+  editingTarget = target;
+  nativeColor.value = currentColors[target];
+  colorOverlay.classList.add("open");
+}
+function closeColorDialog() {
+  colorOverlay.classList.remove("open");
+  editingTarget = null;
+}
+
+document.getElementById("swatch_color1").addEventListener("click", () => openColorDialog("color1"));
+document.getElementById("swatch_color2").addEventListener("click", () => openColorDialog("color2"));
+document.getElementById("closeColorDialog").addEventListener("click", closeColorDialog);
+colorOverlay.addEventListener("click", (e) => { if (e.target === colorOverlay) closeColorDialog(); });
+
+nativeColor.addEventListener("input", () => {
+  if (!editingTarget) return;
+  setSwatch(editingTarget, nativeColor.value);
+  sendMode();
+});
+
+document.getElementById("memBtn").addEventListener("click", () => {
+  if (!editingTarget) return;
+  send({ cmd: "saveFavorite", color: currentColors[editingTarget] });
+});
+
+// --- Néon dynamique ---
+function hexToRgb(hex) {
+  const v = hex.replace('#', '');
+  return { r: parseInt(v.substr(0, 2), 16), g: parseInt(v.substr(2, 2), 16), b: parseInt(v.substr(4, 2), 16) };
+}
+function updateNeonColors(c1, c2) {
+  const root = document.documentElement.style;
+  const rgb1 = hexToRgb(c1), rgb2 = hexToRgb(c2);
+  root.setProperty('--accent', c1);
+  root.setProperty('--accent2', c2);
+  root.setProperty('--accent-soft', `rgba(${rgb1.r},${rgb1.g},${rgb1.b},0.35)`);
+  root.setProperty('--accent-faint', `rgba(${rgb1.r},${rgb1.g},${rgb1.b},0.08)`);
+  root.setProperty('--accent-strong', `rgba(${rgb1.r},${rgb1.g},${rgb1.b},0.5)`);
+  root.setProperty('--accent2-tint', `rgba(${rgb2.r},${rgb2.g},${rgb2.b},0.08)`);
+}
+
+// --- Websocket ---
 const statusEl = document.getElementById("status");
 let ws;
-let suppressSend = false; // évite de renvoyer un écho reçu du serveur
+let suppressSend = false;
 
 function connect() {
-  const wsProtocol =
-    window.location.protocol === "https:" ? "wss:" : "ws:";
-
+  const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   const wsUrl = `${wsProtocol}//${window.location.host}/ws`;
-
-  console.log("Connexion WebSocket :", wsUrl);
-
   ws = new WebSocket(wsUrl);
-
-  ws.onopen = () => {
-    console.log("WebSocket ouvert");
-    statusEl.textContent = "Connecté";
-  };
-
-  ws.onerror = (e) => {
-    console.error("Erreur WebSocket", e);
-  };
-
-  ws.onclose = () => {
-    console.log("WebSocket fermé");
-    statusEl.textContent = "Déconnecté, reconnexion...";
-    setTimeout(connect, 2000);
-  };
-
-  ws.onmessage = (evt) => {
-    applyState(JSON.parse(evt.data));
-  };
+  ws.onopen = () => { statusEl.textContent = "Connecté"; };
+  ws.onerror = (e) => console.error("Erreur WebSocket", e);
+  ws.onclose = () => { statusEl.textContent = "Déconnecté, reconnexion..."; setTimeout(connect, 2000); };
+  ws.onmessage = (evt) => applyState(JSON.parse(evt.data));
 }
 connect();
 
 function applyState(s) {
   suppressSend = true;
   document.querySelectorAll(".mode-btn").forEach(b => b.classList.toggle("active", b.dataset.mode === s.mode));
-  document.getElementById("color1").value = s.color1;
-  document.getElementById("color2").value = s.color2;
+  setSwatch("color1", s.color1);
+  setSwatch("color2", s.color2);
+  updateNeonColors(s.color1, s.color2);
+  document.body.classList.toggle("power-off", !s.powerOn);
   document.getElementById("brightness").value = s.brightness;
-  document.getElementById("wakeEnabled").checked = s.wakeEnabled;
-  document.getElementById("wakeTime").value =
-    String(s.wakeHour).padStart(2,"0") + ":" + String(s.wakeMinute).padStart(2,"0");
-  document.getElementById("wakeDuration").value = Math.round(s.wakeDuration / 60);
   document.getElementById("power").checked = s.powerOn;
+  document.getElementById("wakeEnabled").checked = s.wakeEnabled;
+  hourSel.value = String(s.wakeHour).padStart(2, "0");
+  minSel.value = String(s.wakeMinute).padStart(2, "0");
+  document.getElementById("wakeDuration").value = Math.round(s.wakeDuration / 60);
   document.getElementById("flashAfter").checked = s.wakeFlashAfter;
   wakeDays = s.wakeDays;
   renderDays();
+  if (Array.isArray(s.favorites) && s.favorites.length) {
+    favorites = s.favorites;
+    renderFavorites();
+  }
   suppressSend = false;
 }
 
@@ -439,12 +587,10 @@ function sendMode() {
   send({
     cmd: "setMode",
     mode: active ? active.dataset.mode : "fixed",
-    color1: document.getElementById("color1").value,
-    color2: document.getElementById("color2").value
+    color1: currentColors.color1,
+    color2: currentColors.color2
   });
 }
-document.getElementById("color1").addEventListener("input", sendMode);
-document.getElementById("color2").addEventListener("input", sendMode);
 
 document.getElementById("brightness").addEventListener("input", (e) => {
   send({ cmd: "setBrightness", value: parseInt(e.target.value) });
@@ -456,18 +602,19 @@ document.getElementById("power").addEventListener("change", (e) => {
 document.getElementById("flashAfter").addEventListener("change", sendWake);
 
 function sendWake() {
-  const [h, m] = document.getElementById("wakeTime").value.split(":").map(Number);
   send({
     cmd: "setWake",
     enabled: document.getElementById("wakeEnabled").checked,
-    hour: h, minute: m,
+    hour: parseInt(hourSel.value),
+    minute: parseInt(minSel.value),
     duration: parseInt(document.getElementById("wakeDuration").value) * 60,
-    flashAfter: document.getElementById("wakeFlashAfter").checked,
+    flashAfter: document.getElementById("flashAfter").checked,
     days: wakeDays
   });
 }
 document.getElementById("wakeEnabled").addEventListener("change", sendWake);
-document.getElementById("wakeTime").addEventListener("change", sendWake);
+hourSel.addEventListener("change", sendWake);
+minSel.addEventListener("change", sendWake);
 document.getElementById("wakeDuration").addEventListener("change", sendWake);
 </script>
 </body>
